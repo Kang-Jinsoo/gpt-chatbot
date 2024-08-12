@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .mx-custom {
+    @apply mx-4 sm:mx-10 md:mx-36 lg:mx-64 xl:mx-96;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 5px;
 }
