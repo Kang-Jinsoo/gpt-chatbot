@@ -3,22 +3,54 @@ import "./globals.css";
 import Question from "@/components/ui/question";
 import Answer from "@/components/ui/answer";
 import { useState } from "react";
+import OpenAI from "openai";
+import axios from "axios";
 
 export default function Home() {
   const [question, setQuestion] = useState("");
   const [message, setMessage] = useState<string[]>([]);
+  const [answer, setAnswer] = useState("");
+  const apiKey = process.env.NEXT_PUBLIC_API_KEY as string;
+  const organization = process.env.NEXT_PUBLIC_ORGANIZATION as string;
+  const endpoint = process.env.NEXT_PUBLIC_ANDPOINT as string;
 
   const inputQuestion = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuestion(event.target.value);
   };
 
-  const questionSend = () => {
+  const questionSend = async () => {
     if (question) {
       setMessage([...message, question]);
       setQuestion("");
     }
+    try {
+      const res = await axios.post(
+        endpoint,
+        {
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "user",
+              content: question,
+            },
+          ],
+          temperature: 0.7,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Response:", res.data); // 응답 데이터 확인
+      setAnswer(res.data.choices[0].message.content);
+      console.log(answer);
+    } catch (error: any) {
+      console.error("error = ", error);
+      setAnswer(error.message);
+    }
   };
-
   return (
     <div className="h-full border-white">
       <div className="h-1/6 mx-custom flex items-center">
@@ -28,6 +60,7 @@ export default function Home() {
         {message.map((message, i) => (
           <Question text={message} key={i} />
         ))}
+        <Answer answer={answer} />
       </div>
       <div className="h-1/6 mx-custom flex justify-center items-center">
         <input
@@ -47,5 +80,3 @@ export default function Home() {
     </div>
   );
 }
-
-// onclick을 하면 인풋창에 answer컴포넌트와 함께 입력된 값을 띄운다
