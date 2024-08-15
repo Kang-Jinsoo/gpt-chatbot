@@ -5,11 +5,12 @@ import Answer from "@/components/ui/answer";
 import { useState } from "react";
 import OpenAI from "openai";
 import axios from "axios";
+import QA from "@/components/ui/qa";
 
 export default function Home() {
   const [question, setQuestion] = useState("");
   const [message, setMessage] = useState<string[]>([]);
-  const [answer, setAnswer] = useState("");
+  const [answer, setAnswer] = useState<string[]>([]);
   const apiKey = process.env.NEXT_PUBLIC_API_KEY as string;
   const organization = process.env.NEXT_PUBLIC_ORGANIZATION as string;
   const endpoint = process.env.NEXT_PUBLIC_ANDPOINT as string;
@@ -28,13 +29,7 @@ export default function Home() {
         endpoint,
         {
           model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "user",
-              content: question,
-            },
-          ],
-          temperature: 0.7,
+          messages: [{ role: "user", content: question }],
         },
         {
           headers: {
@@ -43,11 +38,8 @@ export default function Home() {
           },
         }
       );
-      console.log("Response:", res.data); // 응답 데이터 확인
       setAnswer(res.data.choices[0].message.content);
-      console.log(answer);
     } catch (error: any) {
-      console.error("error = ", error);
       setAnswer(error.message);
     }
   };
@@ -58,9 +50,8 @@ export default function Home() {
       </div>
       <div className="h-4/6 mx-custom overflow-y-auto">
         {message.map((message, i) => (
-          <Question text={message} key={i} />
+          <QA user={message} key={i} />
         ))}
-        <Answer answer={answer} />
       </div>
       <div className="h-1/6 mx-custom flex justify-center items-center">
         <input
