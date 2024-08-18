@@ -1,5 +1,5 @@
 export type questionContents = {
-  text: string[];
+  text: string;
 };
 
 export default function Question({ text }: questionContents) {

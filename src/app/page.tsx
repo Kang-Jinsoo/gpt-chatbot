@@ -3,16 +3,15 @@ import "./globals.css";
 import Question from "@/components/ui/question";
 import Answer from "@/components/ui/answer";
 import { useState } from "react";
-import OpenAI from "openai";
 import axios from "axios";
-import QA from "@/components/ui/qa";
+import Message from "@/components/ui/message";
+import Chatting from "./chattingMock";
 
 export default function Home() {
   const [question, setQuestion] = useState("");
-  const [message, setMessage] = useState<string[]>([]);
   const [answer, setAnswer] = useState<string[]>([]);
+  const [message, setMessage] = useState<string[]>([]);
   const apiKey = process.env.NEXT_PUBLIC_API_KEY as string;
-  const organization = process.env.NEXT_PUBLIC_ORGANIZATION as string;
   const endpoint = process.env.NEXT_PUBLIC_ANDPOINT as string;
 
   const inputQuestion = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,7 +20,7 @@ export default function Home() {
 
   const questionSend = async () => {
     if (question) {
-      setMessage([...message, question]);
+      setAnswer([...message, question]);
       setQuestion("");
     }
     try {
@@ -45,15 +44,15 @@ export default function Home() {
   };
   return (
     <div className="h-full border-white">
-      <div className="h-1/6 mx-custom flex items-center">
+      <header className="h-1/6 mx-custom flex items-center">
         <p className="text-3xl font-mono">chatBot</p>
-      </div>
-      <div className="h-4/6 mx-custom overflow-y-auto">
-        {message.map((message, i) => (
-          <QA user={message} key={i} />
+      </header>
+      <main className="h-4/6 mx-custom overflow-y-auto">
+        {Chatting.map((Chatting, i) => (
+          <Message user={Chatting.user} bot={Chatting.bot} key={i} />
         ))}
-      </div>
-      <div className="h-1/6 mx-custom flex justify-center items-center">
+      </main>
+      <footer className="h-1/6 mx-custom flex justify-center items-center">
         <input
           type="text"
           placeholder="질문을 주세요."
@@ -67,7 +66,7 @@ export default function Home() {
         >
           전송
         </button>
-      </div>
+      </footer>
     </div>
   );
 }

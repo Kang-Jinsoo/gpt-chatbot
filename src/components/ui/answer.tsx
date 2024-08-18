@@ -1,5 +1,5 @@
 export type AnswerContents = {
-  answer: string;
+  answer: string[];
 };
 
 export default function Answer({ answer }: AnswerContents) {
