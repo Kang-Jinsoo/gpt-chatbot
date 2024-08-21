@@ -8,8 +8,7 @@ import Mock from "@/components/mock/ChattingMock";
 export default function Home() {
   const [question, setQuestion] = useState("");
   const [message, setMessage] = useState<MessageProps[]>([]);
-  const apiKey = process.env.NEXT_PUBLIC_API_KEY as string;
-  const endpoint = process.env.NEXT_PUBLIC_ANDPOINT as string;
+  const endPoint = process.env.NEXT_PUBLIC_ANDPOINT as string;
 
   const inputQuestion = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuestion(event.target.value);
@@ -18,20 +17,20 @@ export default function Home() {
   const sendQuestion = async () => {
     if (question) {
       const que: MessageProps = { sender: "user", body: question };
+      Mock.push(que);
       setMessage([...message, que]);
-      console.log("question = ", question);
       setQuestion("");
     }
     try {
       const res = await axios.post(
-        endpoint,
+        endPoint,
         {
           model: "gpt-4o-mini",
           messages: [{ role: "user", content: question }],
         },
         {
           headers: {
-            Authorization: `Bearer ${apiKey}`,
+            Authorization: "/apikey",
             "Content-Type": "application/json",
           },
         }
@@ -40,15 +39,16 @@ export default function Home() {
         sender: "bot",
         body: res.data.choices[0].message.content,
       };
+      Mock.push(ans);
       setMessage([...message, ans]);
-      console.log("good = ", message);
     } catch (error: any) {
       const err: MessageProps = {
         sender: "bot",
         body: error.message,
       };
+      Mock.push(err);
+      console.log(err);
       setMessage([...message, err]);
-      console.log("bad = ", message);
     }
   };
   return (
@@ -57,7 +57,7 @@ export default function Home() {
         <p className="text-3xl font-mono">chatBot</p>
       </header>
       <main className="h-4/6 mx-custom overflow-y-auto">
-        {message.map((chat, i) => (
+        {Mock.map((chat, i) => (
           <Message sender={chat.sender} body={chat.body} key={i} />
         ))}
       </main>
