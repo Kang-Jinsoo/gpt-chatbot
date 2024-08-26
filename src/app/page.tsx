@@ -3,25 +3,26 @@ import "./globals.css";
 import { useState } from "react";
 import axios from "axios";
 import { Message, MessageProps } from "@/components/ui/message";
-import Mock from "@/components/mock/ChattingMock";
 
 export default function Home() {
   const [question, setQuestion] = useState("");
   const [message, setMessage] = useState<MessageProps[]>([]);
   const endPoint = process.env.NEXT_PUBLIC_ANDPOINT as string;
+  const apikey = process.env.NEXT_PUBLIC_API_KEY as string;
 
   const inputQuestion = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuestion(event.target.value);
   };
 
   const sendQuestion = async () => {
-    if (question) {
-      const que: MessageProps = { sender: "user", body: question };
-      Mock.push(que);
-      setMessage([...message, que]);
-      setQuestion("");
-    }
     try {
+      if (question.trim().length == 0) {
+        throw new Error("질문을 입력해주세요.");
+      } else {
+        const que: MessageProps = { sender: "user", body: question };
+        setMessage((message) => [...message, que]);
+        setQuestion("");
+      }
       const res = await axios.post(
         endPoint,
         {
@@ -30,7 +31,7 @@ export default function Home() {
         },
         {
           headers: {
-            Authorization: "/apikey",
+            Authorization: `Bearer ${apikey}`,
             "Content-Type": "application/json",
           },
         }
@@ -39,16 +40,13 @@ export default function Home() {
         sender: "bot",
         body: res.data.choices[0].message.content,
       };
-      Mock.push(ans);
-      setMessage([...message, ans]);
+      setMessage((message) => [...message, ans]);
     } catch (error: any) {
       const err: MessageProps = {
         sender: "bot",
         body: error.message,
       };
-      Mock.push(err);
-      console.log(err);
-      setMessage([...message, err]);
+      setMessage((message) => [...message, err]);
     }
   };
   return (
@@ -57,7 +55,7 @@ export default function Home() {
         <p className="text-3xl font-mono">chatBot</p>
       </header>
       <main className="h-4/6 mx-custom overflow-y-auto">
-        {Mock.map((chat, i) => (
+        {message.map((chat, i) => (
           <Message sender={chat.sender} body={chat.body} key={i} />
         ))}
       </main>
