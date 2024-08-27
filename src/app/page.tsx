@@ -14,15 +14,24 @@ export default function Home() {
     setQuestion(event.target.value);
   };
 
-  const sendQuestion = async () => {
+  const validateQuestion = (): boolean => {
+    if (question.trim().length == 0) {
+      const failed: MessageProps = {
+        sender: "bot",
+        body: "질문을 입력해주세요.",
+      };
+      setMessage((message) => [...message, failed]);
+      return false;
+    } else {
+      const que: MessageProps = { sender: "user", body: question };
+      setMessage((message) => [...message, que]);
+      setQuestion("");
+      return true;
+    }
+  };
+
+  const requestApi = async () => {
     try {
-      if (question.trim().length == 0) {
-        throw new Error("질문을 입력해주세요.");
-      } else {
-        const que: MessageProps = { sender: "user", body: question };
-        setMessage((message) => [...message, que]);
-        setQuestion("");
-      }
       const res = await axios.post(
         endPoint,
         {
@@ -42,6 +51,7 @@ export default function Home() {
       };
       setMessage((message) => [...message, ans]);
     } catch (error: any) {
+      console.log("err = ", error);
       const err: MessageProps = {
         sender: "bot",
         body: error.message,
@@ -49,6 +59,13 @@ export default function Home() {
       setMessage((message) => [...message, err]);
     }
   };
+
+  const sendQuestion = () => {
+    if (validateQuestion() == false) {
+      return;
+    } else requestApi();
+  };
+
   return (
     <div className="h-full border-white">
       <header className="h-1/6 mx-custom flex items-center">
