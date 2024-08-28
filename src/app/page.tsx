@@ -14,11 +14,21 @@ export default function Home() {
     setQuestion(event.target.value);
   };
 
-  const validateQuestion = (): boolean => {
+  type resType = {
+    data: {
+      choices: Array<{
+        message: {
+          content: "";
+        };
+      }>;
+    };
+  };
+
+  const checkValidQuestion = (): boolean => {
     if (question.trim().length == 0) {
       const failed: MessageProps = {
         sender: "bot",
-        body: "질문을 입력해주세요.",
+        body: "1글자 이상의 질문을 입력해주세요.",
       };
       setMessage((message) => [...message, failed]);
       return false;
@@ -32,7 +42,7 @@ export default function Home() {
 
   const requestApi = async () => {
     try {
-      const res = await axios.post(
+      const res: resType = await axios.post(
         endPoint,
         {
           model: "gpt-4o-mini",
@@ -45,25 +55,55 @@ export default function Home() {
           },
         }
       );
+      if (
+        !res ||
+        !res.data ||
+        !res.data.choices ||
+        Array.isArray(res.data.choices) == false ||
+        res.data.choices.length == 0 ||
+        !res.data.choices[0].message ||
+        !res.data.choices[0].message.content
+      ) {
+        throw new Error("응답을 받지 못했습니다. 다시 시도해 주세요.");
+      }
       const ans: MessageProps = {
         sender: "bot",
         body: res.data.choices[0].message.content,
       };
       setMessage((message) => [...message, ans]);
-    } catch (error: any) {
-      console.log("err = ", error);
-      const err: MessageProps = {
-        sender: "bot",
-        body: error.message,
-      };
-      setMessage((message) => [...message, err]);
+    } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        error.response &&
+        error.response.status
+      ) {
+        if (error.response.status >= 400 && error.response.status < 500) {
+          const err: MessageProps = {
+            sender: "bot",
+            body: "잘못된 요청입니다. 잠시 후 시도해 주세요.",
+          };
+          setMessage((message) => [...message, err]);
+        } else if (error.response.status >= 500) {
+          const err: MessageProps = {
+            sender: "bot",
+            body: "서버에 문제가 생겼습니다. 잠시 후 다시 시도해 주세요.",
+          };
+          setMessage((message) => [...message, err]);
+        } else {
+          const err: MessageProps = {
+            sender: "bot",
+            body: "알 수 없는 에러가 발생했습니다." + error.message,
+          };
+          setMessage((message) => [...message, err]);
+        }
+      }
     }
   };
 
   const sendQuestion = () => {
-    if (validateQuestion() == false) {
-      return;
-    } else requestApi();
+    if (checkValidQuestion()) {
+      requestApi();
+    } else return;
   };
 
   return (
